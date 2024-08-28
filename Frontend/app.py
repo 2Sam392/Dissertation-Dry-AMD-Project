@@ -43,7 +43,7 @@ transform = transforms.Compose([
 ])
 
 # Streamlit app
-st.title('Dry AMD Prediction')
+st.title('Dry AMD Prediction- MONDry-FR Model')
 
 uploaded_file = st.file_uploader("Choose an image...", type="jpg")
 if uploaded_file is not None:
@@ -53,11 +53,14 @@ if uploaded_file is not None:
     
     with torch.no_grad():
         outputs = model(image)
-        _, predicted = torch.max(outputs, 1)
-    
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)  # Get probabilities using softmax
+        confidence, predicted = torch.max(probabilities, 1)  # Get the predicted class and its confidence score 
+
     st.image(uploaded_file, caption='Uploaded Image.', use_column_width=True)
     ans = int(predicted.item())
+    confidence_score = confidence.item() * 100  # Convert to percentage
+
     if ans == 1:
-        st.success('No AMD Detected')
+        st.success(f'No Dry AMD Detected with {confidence_score:.2f}% confidence.')
     elif ans == 0:
-        st.error('Dry AMD Detected')
+        st.error(f'Dry AMD Detected with {confidence_score:.2f}% confidence.')
